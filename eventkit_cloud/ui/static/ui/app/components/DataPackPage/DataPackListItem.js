@@ -270,7 +270,6 @@ export class DataPackListItem extends Component {
                                     {this.props.run.job.permissions.value !== 'PRIVATE' ?
                                         <SocialGroup className="qa-DataPackListItem-SocialGroup" style={styles.publishedIcon} />
                                         :
-                                        
                                         <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
                                     }
                                     {this.props.run.status === 'SUBMITTED' ?

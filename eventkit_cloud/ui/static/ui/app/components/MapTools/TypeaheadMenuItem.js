@@ -28,10 +28,10 @@ export class TypeaheadMenuItem extends Component {
                 width: '40px',
                 padding: '0px',
                 verticalAlign: 'middle',
-                color: '#707274'
+                color: '#707274',
             },
             iconDiv: {
-                width: '45px'
+                width: '45px',
             },
             text: {
                 color: '#707274',
@@ -48,12 +48,12 @@ export class TypeaheadMenuItem extends Component {
 
         let icon = null;
         if (this.props.result && this.props.result.geometry && this.props.result.geometry.type) {
-            icon = this.props.result.geometry.type == 'Point' ? 
-                <ActionRoom className={"qa-TypeaheadMenuItem-ActionRoom"} style={styles.icon}/> 
-            : 
-                <ImageCropDin className={"qa-TypeaheadMenuItem-ImageCropDin"} style={styles.icon}/>;
+            icon = this.props.result.geometry.type === 'Point' ?
+                <ActionRoom className="qa-TypeaheadMenuItem-ActionRoom" style={styles.icon} />
+                :
+                <ImageCropDin className="qa-TypeaheadMenuItem-ImageCropDin" style={styles.icon} />;
         }
-        
+
         return (
             <MenuItem
                 option={this.props.result} 
@@ -79,13 +79,13 @@ export class TypeaheadMenuItem extends Component {
                     </div>
                 </div>
             </MenuItem>
-        )
+        );
     }
 }
 
 TypeaheadMenuItem.propTypes = {
     result: PropTypes.object,
     index: PropTypes.number,
-}
+};
 
 export default TypeaheadMenuItem;

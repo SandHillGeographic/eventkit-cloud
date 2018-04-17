@@ -20,9 +20,9 @@ export class Warning extends Component {
     }
 }
 
-Warning.protoTypes = {
+Warning.propTypes = {
     text: PropTypes.oneOfType([
-        PropTypes.string, 
+        PropTypes.string,
         PropTypes.node,
     ]).isRequired,
 };

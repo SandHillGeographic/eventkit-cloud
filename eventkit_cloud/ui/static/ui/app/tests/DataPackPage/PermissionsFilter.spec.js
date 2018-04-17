@@ -81,8 +81,7 @@ describe('PermissionsFilter component', () => {
         props.permissions.groups = {};
         props.permissions.members = {};
         const wrapper = getWrapper(props);
-        const button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
-
+        const button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button').hostNodes();
         expect(button.text()).toEqual('No Members / No Groups');
 
         let nextProps = { ...props };

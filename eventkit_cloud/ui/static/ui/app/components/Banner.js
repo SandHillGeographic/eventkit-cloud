@@ -1,12 +1,7 @@
-import * as React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
 
-class Banner extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-
+class Banner extends Component {
     render() {
         const style = {
             position: 'absolute',
@@ -16,7 +11,7 @@ class Banner extends React.Component {
             backgroundColor: this.context.config.BANNER_BACKGROUND_COLOR ? this.context.config.BANNER_BACKGROUND_COLOR : '#000',
             color: this.context.config.BANNER_TEXT_COLOR ? this.context.config.BANNER_TEXT_COLOR: '#fff',
             fontSize: '18px',
-            textAlign: 'center'
+            textAlign: 'center',
         }
 
         return (
@@ -28,7 +23,7 @@ class Banner extends React.Component {
 }
 
 Banner.contextTypes = {
-    config: PropTypes.object
-}
+    config: PropTypes.object,
+};
 
 export default Banner;

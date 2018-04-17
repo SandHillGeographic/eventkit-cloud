@@ -153,12 +153,12 @@ describe('DataPackGridItem component', () => {
         const wrapper = getWrapper(props);
         const updateSpy = sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
         wrapper.instance().initMap = sinon.spy();
-        expect(wrapper.find(`#${uid}_map`)).toHaveLength(1);
+        expect(wrapper.find(`#map_${uid}`).hostNodes()).toHaveLength(1);
         wrapper.setState({ expanded: false });
         expect(wrapper.find(CardMedia)).toHaveLength(0);
         expect(updateSpy.called).toBe(true);
         expect(wrapper.instance().initMap.called).toBe(false);
-        expect(wrapper.find(`#${uid}_map`)).toHaveLength(0);
+        expect(wrapper.find(`#map_${uid}`).hostNodes()).toHaveLength(0);
         updateSpy.restore();
     });
 
@@ -238,7 +238,7 @@ describe('DataPackGridItem component', () => {
             },
             providerDialogOpen: true,
         })).toBe(true);
-        stateSpy.restore();
+        stateStub.restore();
     });
 
     it('showDeleteDialog should set deleteDialogOpen to true', () => {

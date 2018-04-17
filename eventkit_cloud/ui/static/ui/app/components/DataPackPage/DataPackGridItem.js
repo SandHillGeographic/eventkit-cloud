@@ -65,7 +65,7 @@ export class DataPackGridItem extends Component {
 
     initMap() {
         const map = new Map({
-            target: `${this.props.run.uid}_map`,
+            target: `map_${this.props.run.uid}`,
             layers: [
                 new Tile({
                     source: new XYZ({
@@ -391,7 +391,7 @@ export class DataPackGridItem extends Component {
                     </span>
                 </CardText>
                 <CardMedia expandable>
-                    <div id={`${this.props.run.uid}_map`} style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }} />
+                    <div id={`map_${this.props.run.uid}`} style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }} />
                 </CardMedia>
                 <CardActions style={{ height: '45px' }}>
                     <span>

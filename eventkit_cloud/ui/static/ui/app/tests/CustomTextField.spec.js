@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { mount } from 'enzyme';
+import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { TextField } from 'material-ui';
 import CustomTextField from '../components/CustomTextField';
@@ -46,10 +47,11 @@ describe('CustomTextField component', () => {
         const wrapper = getWrapper({ maxLength: 11 });
         const input = wrapper.find('input');
         input.simulate('focus');
-        const charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
+        let charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
         expect(charsRemaining).toHaveLength(1);
         expect(charsRemaining.props().style.color).toEqual('#B4B7B8');
         input.simulate('change', { target: { value: 'something' } });
+        charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
         expect(charsRemaining.props().style.color).toEqual('#CE4427');
     });
 
