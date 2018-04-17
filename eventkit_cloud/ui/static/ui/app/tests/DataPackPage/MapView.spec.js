@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import sinon from 'sinon';
 import raf from 'raf';
-import { mount, shallow } from 'enzyme';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { GridList } from 'material-ui/GridList';
 import axios from 'axios';
@@ -24,38 +24,37 @@ import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import LoadButtons from '../../components/DataPackPage/LoadButtons';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar.js';
-import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar.js';
-import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js';
-import DropZone from '../../components/MapTools/DropZone.js';
+import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar';
+import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
+import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning';
+import DropZone from '../../components/MapTools/DropZone';
 import * as utils from '../../utils/mapUtils';
 import MapView, { RED_STYLE, BLUE_STYLE } from '../../components/DataPackPage/MapView';
+import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
 
-const providers = [
-    {
-        id: 2,
-        model_url: 'http://cloud.eventkit.dev/api/providers/osm',
-        type: 'osm',
-        license: null,
-        created_at: '2017-08-15T19:25:10.844911Z',
-        updated_at: '2017-08-15T19:25:10.844919Z',
-        uid: 'bc9a834a-727a-4779-8679-2500880a8526',
-        name: 'OpenStreetMap Data (Themes)',
-        slug: 'osm',
-        preview_url: '',
-        service_copyright: '',
-        service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
-        layer: null,
-        level_from: 0,
-        level_to: 10,
-        zip: false,
-        display: true,
-        export_provider_type: 2,
-    },
-]
+const providers = [{
+    id: 2,
+    model_url: 'http://cloud.eventkit.test/api/providers/osm',
+    type: 'osm',
+    license: null,
+    created_at: '2017-08-15T19:25:10.844911Z',
+    updated_at: '2017-08-15T19:25:10.844919Z',
+    uid: 'bc9a834a-727a-4779-8679-2500880a8526',
+    name: 'OpenStreetMap Data (Themes)',
+    slug: 'osm',
+    preview_url: '',
+    service_copyright: '',
+    service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+    layer: null,
+    level_from: 0,
+    level_to: 10,
+    zip: false,
+    display: true,
+    export_provider_type: 2,
+}];
 
 describe('MapView component', () => {
     const muiTheme = getMuiTheme();
@@ -98,12 +97,14 @@ describe('MapView component', () => {
         const stub2 = sinon.stub(utils, 'generateDrawFreeInteraction')
             .callsFake(() => ({ on: () => {}, setActive: () => {} }));
         Map.prototype.addInteraction = sinon.spy();
+        sinon.stub(MapView.prototype, 'updateZoomLevel');
     });
 
     afterEach(() => {
         MapView.prototype.initOverlay = initOverlay;
         utils.generateDrawBoxInteraction.restore();
         utils.generateDrawFreeInteraction.restore();
+        MapView.prototype.updateZoomLevel.restore();
     });
 
     it('should render all the basic components', () => {        
@@ -116,6 +117,7 @@ describe('MapView component', () => {
         expect(wrapper.find('#map')).toHaveLength(1);
         expect(wrapper.find(SearchAOIToolbar)).toHaveLength(1);
         expect(wrapper.find(DrawAOIToolbar)).toHaveLength(1);
+        expect(wrapper.find(ZoomLevelLabel)).toHaveLength(1);
         expect(wrapper.find(InvalidDrawWarning)).toHaveLength(1);
         expect(wrapper.find(DropZone)).toHaveLength(1);
         expect(wrapper.find('#popup')).toHaveLength(1);
@@ -1958,7 +1960,7 @@ describe('MapView component', () => {
 function getRuns() {
     return [{
         uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-        url: 'http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
         started_at: '2017-03-10T15:52:35.637331Z',
         finished_at: '2017-03-10T15:52:39.837Z',
         duration: '0:00:04.199825',
@@ -1970,7 +1972,7 @@ function getRuns() {
             event: 'Test1 event',
             featured: false,
             description: 'Test1 description',
-            url: 'http://cloud.eventkit.dev/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
             extent: {
                 type: 'Feature',
                 properties: {
@@ -2006,15 +2008,19 @@ function getRuns() {
                 },
             },
             selection: '',
-            published: false,
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
         },
         provider_tasks: [],
-        zipfile_url: 'http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
         expiration: '2017-03-24T15:52:35.637258Z',
     },
     {
         uid: 'c7466114-8c0c-4160-8383-351414b11e37',
-        url: 'http://cloud.eventkit.dev/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
+        url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
         started_at: '2017-03-10T15:52:29.311523Z',
         finished_at: '2017-03-10T15:52:33.612Z',
         duration: '0:00:04.301278',
@@ -2026,7 +2032,7 @@ function getRuns() {
             event: 'Test2 event',
             featured: true,
             description: 'Test2 description',
-            url: 'http://cloud.eventkit.dev/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
+            url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
             extent: {
                 type: 'Feature',
                 properties: {
@@ -2062,15 +2068,19 @@ function getRuns() {
                 },
             },
             selection: '',
-            published: true,
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
         },
         provider_tasks: [],
-        zipfile_url: 'http://cloud.eventkit.dev/downloads/c7466114-8c0c-4160-8383-351414b11e37/TestGPKG-WMS-TestProject-eventkit-20170310.zip',
+        zipfile_url: 'http://cloud.eventkit.test/downloads/c7466114-8c0c-4160-8383-351414b11e37/TestGPKG-WMS-TestProject-eventkit-20170310.zip',
         expiration: '2017-03-24T15:52:29.311458Z',
     },
     {
         uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
-        url: 'http://cloud.eventkit.dev/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
+        url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
         started_at: '2017-03-10T15:52:18.796929Z',
         finished_at: '2017-03-10T15:52:27.500Z',
         duration: '0:00:08.703092',
@@ -2082,7 +2092,7 @@ function getRuns() {
             event: 'Test3 event',
             featured: false,
             description: 'Test3 description',
-            url: 'http://cloud.eventkit.dev/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+            url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
             extent: {
                 type: 'Feature',
                 properties: {
@@ -2118,10 +2128,14 @@ function getRuns() {
                 },
             },
             selection: '',
-            published: true,
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
         },
         provider_tasks: [],
-        zipfile_url: 'http://cloud.eventkit.dev/downloads/282816a6-7d16-4f59-a1a9-18764c6339d6/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip',
+        zipfile_url: 'http://cloud.eventkit.test/downloads/282816a6-7d16-4f59-a1a9-18764c6339d6/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip',
         expiration: '2017-03-24T15:52:18.796854Z',
     }];
 }

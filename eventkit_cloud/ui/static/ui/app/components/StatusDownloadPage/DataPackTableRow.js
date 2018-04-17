@@ -12,7 +12,6 @@ export class DataPackTableRow extends Component {
             },
             title: {
                 display: 'flex',
-                alignItems: 'center',
                 flex: '0 0 auto',
                 width: '140px',
                 backgroundColor: '#f8f8f8',
@@ -22,11 +21,15 @@ export class DataPackTableRow extends Component {
             },
             data: {
                 display: 'flex',
-                alignItems: 'center',
                 flex: '1 1 auto',
                 backgroundColor: '#f8f8f8',
                 color: '#8b9396',
-                padding: '10px',
+                paddingRight: '10px',
+                paddingBottom: '0px',
+                paddingTop: '10px',
+                paddingLeft: '10px',
+                wordBreak: 'break-word',
+                width: '100%',
                 ...this.props.dataStyle,
             },
         };
@@ -44,7 +47,9 @@ export class DataPackTableRow extends Component {
                 <div
                     style={styles.data}
                 >
-                    {this.props.data}
+
+                        {this.props.data}
+
                 </div>
             </div>
         );

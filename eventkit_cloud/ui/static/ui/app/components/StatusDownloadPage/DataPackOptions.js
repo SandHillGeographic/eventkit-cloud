@@ -112,7 +112,7 @@ export class DataPackOptions extends Component {
                 <RaisedButton
                     className="qa-DataPackOptions-RaisedButton-rerunExport"
                     style={{ margin: '10px' }}
-                    disabled={this.props.rerunDisabled}
+                    disabled={!this.props.adminPermissions}
                     backgroundColor="rgba(226,226,226,0.5)"
                     disableTouchRipple
                     labelColor="#4598bf"
@@ -151,6 +151,7 @@ export class DataPackOptions extends Component {
                 <RaisedButton
                     className="qa-DataPackOptions-RaisedButton-deleteExport"
                     style={{ margin: '10px' }}
+                    disabled={!this.props.adminPermissions}
                     backgroundColor="rgba(226,226,226,0.5)"
                     disableTouchRipple
                     labelColor="#ff0000"
@@ -170,11 +171,11 @@ export class DataPackOptions extends Component {
 }
 
 DataPackOptions.defaultProps = {
-    rerunDisabled: true,
+    adminPermissions: false,
 };
 
 DataPackOptions.propTypes = {
-    rerunDisabled: PropTypes.bool,
+    adminPermissions: PropTypes.bool,
     onRerun: PropTypes.func.isRequired,
     onClone: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,

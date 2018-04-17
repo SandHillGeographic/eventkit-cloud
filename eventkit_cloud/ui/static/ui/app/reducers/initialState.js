@@ -1,7 +1,7 @@
-import { userState as authInitialState } from './userReducer';
+import { userState, usersState } from './userReducer';
 
 export default {
-    auth: authInitialState,
+    auth: userState,
     aoiInfo: {
         geojson: {},
         originalGeojson: {},
@@ -17,7 +17,7 @@ export default {
         data: [],
         error: null,
     },
-    user: authInitialState,
+    user: userState,
     importGeom: {
         processing: false,
         processed: false,
@@ -52,7 +52,6 @@ export default {
         exportName: '',
         datapackDescription: '',
         projectName: '',
-        makePublic: false,
         providers: [],
         areaStr: '',
         formats: [],
@@ -98,4 +97,18 @@ export default {
         error: null,
     },
     formats: [],
+    groups: {
+        groups: [],
+        cancelSource: null,
+        fetching: false,
+        fetched: false,
+        creating: false,
+        created: false,
+        deleting: false,
+        deleted: false,
+        updating: false,
+        updated: false,
+        error: null,
+    },
+    users: usersState,
 };

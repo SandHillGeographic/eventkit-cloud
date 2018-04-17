@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
+import mock
+import json
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -10,8 +12,10 @@ from django.template.loader import get_template
 
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.scheduled_tasks import expire_runs, send_warning_email
-from mock import patch
+from eventkit_cloud.tasks.scheduled_tasks import expire_runs, send_warning_email, check_provider_availability
+from eventkit_cloud.utils.provider_check import CheckResults
+from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
+from mock import patch, call
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +72,7 @@ class TestExpireRunsTask(TestCase):
 
             self.assertEquals('Expire Runs', expire_runs.name)
             expire_runs.run()
-            site_url = getattr(settings, "SITE_URL", "cloud.eventkit.dev")
+            site_url = getattr(settings, "SITE_URL", "cloud.eventkit.test")
             expected_url = '{0}/status/{1}'.format(site_url.rstrip('/'), job.uid)
             send_email.assert_any_call(date=now_time + timezone.timedelta(days=1), url=expected_url,
                                        addr=job.user.email, job_name=job.name)
@@ -77,12 +81,32 @@ class TestExpireRunsTask(TestCase):
             self.assertEqual(3, ExportRun.objects.all().count())
 
 
+class TestCheckProviderAvailabilityTask(TestCase):
+
+    @patch('eventkit_cloud.utils.provider_check.perform_provider_check')
+    def test_check_provider_availability(self, perform_provider_check_mock):
+        perform_provider_check_mock.return_value = json.dumps(CheckResults.SUCCESS.value[0])
+        first_provider = DataProvider.objects.create(slug='first_provider', name='first_provider')
+        second_provider = DataProvider.objects.create(slug='second_provider', name='second_provider')
+        DataProviderStatus.objects.create(related_provider=first_provider)
+
+        check_provider_availability()
+
+        perform_provider_check_mock.assert_has_calls([call(first_provider, None), call(second_provider, None)])
+        statuses = DataProviderStatus.objects.filter(related_provider=first_provider)
+        self.assertEqual(len(statuses), 2)
+        most_recent_first_provider_status = statuses.order_by('-id')[0]
+        self.assertEqual(most_recent_first_provider_status.status, CheckResults.SUCCESS.value[0]['status'])
+        self.assertEqual(most_recent_first_provider_status.status_type, CheckResults.SUCCESS.value[0]['type'])
+        self.assertEqual(most_recent_first_provider_status.message, CheckResults.SUCCESS.value[0]['message'])
+
+
 class TestEmailNotifications(TestCase):
 
     @patch('eventkit_cloud.tasks.scheduled_tasks.EmailMultiAlternatives')
     def test_send_warning_email(self, alternatives):
         now = timezone.now()
-        site_url = getattr(settings, "SITE_URL", "http://cloud.eventkit.dev")
+        site_url = getattr(settings, "SITE_URL", "http://cloud.eventkit.test")
         url = '{0}/status/1234'.format(site_url.rstrip('/'))
         addr = 'test@test.com'
         job_name = "job"

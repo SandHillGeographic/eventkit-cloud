@@ -4,6 +4,7 @@ from __future__ import unicode_literals, absolute_import
 import json
 import logging
 import uuid
+from enum import Enum
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
@@ -79,7 +80,7 @@ class License(TimeStampedModelMixin):
 
 class UserLicense(TimeStampedModelMixin):
     """
-    Model to hold which licenses a User acknowledges. 
+    Model to hold which licenses a User acknowledges.
     """
     user = models.ForeignKey(User)
     license = models.ForeignKey(License)
@@ -134,7 +135,12 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     """
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
     slug = LowerCaseCharField(max_length=40, unique=True, default='')
-    url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
+    url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True,
+                           help_text='The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is '
+                                     'also used to check availability for all OGC services. If you are adding a TMS '
+                                     'service, please provide a link to a single tile, but with the coordinate numbers '
+                                     'replaced by {z}, {y}, and {x}. Example: https://tiles.your-geospatial-site.com/'
+                                     'tiles/default/{z}/{y}/{x}.png')
     preview_url = models.CharField(verbose_name="Preview URL", max_length=1000, null=True, default='', blank=True,
                                    help_text="This url will be served to the front end for displaying in the map.")
     service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
@@ -171,6 +177,21 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
 
     def __unicode__(self,):
         return '{0}'.format(self.name)
+
+
+class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
+    """
+    Model that remembers the last recorded status of a data provider.
+    """
+    status = models.CharField(max_length=10, blank=True)
+    status_type = models.CharField(max_length=25, blank=True)
+    message = models.CharField(max_length=150, blank=True)
+    last_check_time = models.DateTimeField(null=True)
+    related_provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
+
+    class Meta:
+        verbose_name_plural = 'data provider statuses'
+        ordering = ['-last_check_time']
 
 
 class Region(UIDMixin, TimeStampedModelMixin):
@@ -220,24 +241,34 @@ class DataProviderTask(models.Model):
         return '{0} - {1}'.format(self.uid, self.provider)
 
 
+class VisibilityState(Enum):
+    PRIVATE = "PRIVATE"
+    PUBLIC  = "PUBLIC"
+    SHARED  = "SHARED"
+
 class Job(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Job.
     """
+
+
     def __init__(self, *args, **kwargs):
         kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
         kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Job, self).__init__(*args, **kwargs)
 
+
+
     user = models.ForeignKey(User, related_name='owner')
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, db_index=True)
     event = models.CharField(max_length=100, db_index=True, default='', blank=True)
-    region = models.ForeignKey(Region, null=True, on_delete=models.SET_NULL)
+    region = models.ForeignKey(Region, null=True, blank=True, on_delete=models.SET_NULL)
     provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
+    visibility = models.CharField(max_length=10,default=VisibilityState.PRIVATE.value)
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
@@ -347,17 +378,6 @@ class ExportProfile(models.Model):
 
     def __str__(self):
         return '{0}'.format(self.name)
-
-
-def user_owns_job(user=None, job_uid=None):
-    if not job_uid or not user:
-        return False
-    job = Job.objects.get(uid=job_uid)
-    if job.user == user or job.published:
-        return True
-    else:
-        return False
-
 
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):

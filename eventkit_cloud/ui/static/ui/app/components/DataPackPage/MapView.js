@@ -45,6 +45,8 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
     isBox, isVertex } from '../../utils/mapUtils';
+import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
+import { userIsDataPackAdmin } from '../../utils/generic';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -94,6 +96,7 @@ export class MapView extends Component {
         this.handleDrag = this.handleDrag.bind(this);
         this.handleDown = this.handleDown.bind(this);
         this.doesMapHaveDrawFeature = this.doesMapHaveDrawFeature.bind(this);
+        this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.state = {
             selectedFeature: null,
             groupedFeatures: [],
@@ -109,6 +112,7 @@ export class MapView extends Component {
             showInvalidDrawWarning: false,
             mode: MODE_NORMAL,
             disableMapClick: false,
+            zoomLevel: 2,
         };
     }
 
@@ -160,6 +164,9 @@ export class MapView extends Component {
             this.map.getView().fit(this.source.getExtent(), this.map.getSize());
         }
         this.clickListener = this.map.on('singleclick', this.onMapClick);
+
+        this.updateZoomLevel();
+        this.map.getView().on('propertychange', this.updateZoomLevel);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -197,6 +204,10 @@ export class MapView extends Component {
     // update map size so it doesnt look like crap after page resize
     componentDidUpdate() {
         this.map.updateSize();
+    }
+    
+    updateZoomLevel() {
+        this.setState({ zoomLevel: this.map.getView().getZoom() });
     }
 
     hasNewRuns(prevRuns, nextRuns) {
@@ -237,7 +248,7 @@ export class MapView extends Component {
         return new Map({
             controls: [
                 new ScaleLine({
-                    className: css.olScaleLine,
+                    className: css.olScaleLineLargeMap,
                 }),
                 new Attribution({
                     className: ['ol-attribution', css['ol-attribution']].join(' '),
@@ -282,7 +293,7 @@ export class MapView extends Component {
             view: new View({
                 projection: 'EPSG:3857',
                 center: [110, 0],
-                zoom: 2,
+                zoom: this.state.zoomLevel,
                 minZoom: 2,
                 maxZoom: 22,
             }),
@@ -882,17 +893,22 @@ export class MapView extends Component {
                             padding={0}
                             style={{ width: '100%' }}
                         >
-                            {this.props.runs.map(run => (
-                                <DataPackListItem
-                                    run={run}
-                                    user={this.props.user}
-                                    key={run.uid}
-                                    onRunDelete={this.props.onRunDelete}
-                                    onClick={this.handleClick}
-                                    backgroundColor={this.state.selectedFeature === run.uid ? '#dedfdf' : null}
-                                    providers={this.props.providers}
-                                />
-                            ))}
+                            {this.props.runs.map((run) => {
+                                const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
+                                return (
+                                    <DataPackListItem
+                                        run={run}
+                                        user={this.props.user}
+                                        key={run.uid}
+                                        onRunDelete={this.props.onRunDelete}
+                                        onClick={this.handleClick}
+                                        backgroundColor={this.state.selectedFeature === run.uid ? '#dedfdf' : null}
+                                        providers={this.props.providers}
+                                        openShare={this.props.openShare}
+                                        adminPermission={admin}
+                                    />
+                                );
+                            })}
                         </GridList>
                     </div>
                     {load}
@@ -920,6 +936,9 @@ export class MapView extends Component {
                             setImportButtonSelected={() => { this.setButtonSelected('import'); }}
                             setImportModalState={this.toggleImportModal}
                             title="FILTERS"
+                        />
+                        <ZoomLevelLabel
+                            zoomLevel={this.state.zoomLevel}
                         />
                         <InvalidDrawWarning
                             show={this.state.showInvalidDrawWarning}
@@ -993,6 +1012,13 @@ MapView.propTypes = {
     processGeoJSONFile: PropTypes.func.isRequired,
     resetGeoJSONFile: PropTypes.func.isRequired,
     onMapFilter: PropTypes.func.isRequired,
+    openShare: PropTypes.func.isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
 };
 
 export default MapView;

@@ -26,7 +26,6 @@ describe('BreadcrumbStepper component', () => {
             exportName: '',
             datapackDescription: '',
             projectName: '',
-            makePublic: false,
             providers,
             areaStr: '',
             formats: ['gpkg'],
@@ -295,7 +294,6 @@ describe('BreadcrumbStepper component', () => {
             description: 'test description',
             event: 'test event',
             include_zipfile: false,
-            published: false,
             provider_tasks: [{
                 provider: 'OpenStreetMap Data (Themes)',
                 formats: ['gpkg'],
@@ -387,7 +385,7 @@ const providers = [
     {
         "display":true,
         "id": 1,
-        "model_url": "http://cloud.eventkit.dev/api/providers/1",
+        "model_url": "http://cloud.eventkit.test/api/providers/1",
         "type": "osm-generic",
         "created_at": "2017-03-24T17:44:22.940611Z",
         "updated_at": "2017-03-24T17:44:22.940629Z",
@@ -407,35 +405,35 @@ const providers = [
 const formats = [
     {
         "uid": "fa94240a-14d1-469f-8b31-335cab6b682a",
-        "url": "http://cloud.eventkit.dev/api/formats/shp",
+        "url": "http://cloud.eventkit.test/api/formats/shp",
         "slug": "shp",
         "name": "ESRI Shapefile Format",
         "description": "Esri Shapefile (OSM Schema)"
     },
     {
         "uid": "381e8529-b6d8-46f4-b6d1-854549ae652c",
-        "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+        "url": "http://cloud.eventkit.test/api/formats/gpkg",
         "slug": "gpkg",
         "name": "Geopackage",
         "description": "GeoPackage"
     },
     {
         "uid": "db36b559-bbca-4322-b059-048dabeceb67",
-        "url": "http://cloud.eventkit.dev/api/formats/gtiff",
+        "url": "http://cloud.eventkit.test/api/formats/gtiff",
         "slug": "gtiff",
         "name": "GeoTIFF Format",
         "description": "GeoTIFF Raster"
     },
     {
         "uid": "79f1d574-ca37-4011-a99c-0484dd331dc3",
-        "url": "http://cloud.eventkit.dev/api/formats/kml",
+        "url": "http://cloud.eventkit.test/api/formats/kml",
         "slug": "kml",
         "name": "KML Format",
         "description": "Google Earth KMZ"
     },
     {
         "uid": "20a6ba89-e03d-4610-b61f-158a74f963c4",
-        "url": "http://cloud.eventkit.dev/api/formats/sqlite",
+        "url": "http://cloud.eventkit.test/api/formats/sqlite",
         "slug": "sqlite",
         "name": "SQLITE Format",
         "description": "SQlite SQL"
