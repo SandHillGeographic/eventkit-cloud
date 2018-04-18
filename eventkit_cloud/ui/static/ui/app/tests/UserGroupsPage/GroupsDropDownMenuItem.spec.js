@@ -47,7 +47,7 @@ describe('GroupsDropDownMenu component', () => {
         const props = getProps();
         props.onClick = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.find(MenuItem).props().onTouchTap();
+        wrapper.find(MenuItem).props().onClick();
         expect(props.onClick.calledOnce).toBe(true);
         expect(props.onClick.calledWith(props.group)).toBe(true);
     });

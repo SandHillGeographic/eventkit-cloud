@@ -36,7 +36,7 @@ export class GroupsDropDownMenuItem extends Component {
                 key={this.props.group.id}
                 style={styles.menuItem}
                 innerDivStyle={styles.menuItemInner}
-                onTouchTap={() => { this.props.onClick(this.props.group); }}
+                onClick={() => { this.props.onClick(this.props.group); }}
                 className="qa-GroupsDropDownMenuItem-MenuItem"
             >
                 <div

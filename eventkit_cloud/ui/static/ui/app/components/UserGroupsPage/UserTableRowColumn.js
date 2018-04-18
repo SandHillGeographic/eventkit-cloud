@@ -192,7 +192,7 @@ export class UserTableRowColumn extends Component {
                         <MenuItem
                             style={styles.menuItem}
                             innerDivStyle={styles.menuItemInner}
-                            onTouchTap={this.handleNewGroupClick}
+                            onClick={this.handleNewGroupClick}
                             className="qa-UserTableRowColumn-MenuItem-newGroup"
                         >
                             <span>Share with New Group</span>
