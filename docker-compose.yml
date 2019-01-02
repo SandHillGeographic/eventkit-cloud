@@ -1,6 +1,7 @@
 version: '3'
 services:
   eventkit:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: config/Dockerfile
@@ -8,6 +9,7 @@ services:
     volumes:
     - ./:/var/lib/eventkit/
     - /var/lib/eventkit/node_modules/
+    - /downloads:/downloads
     user: eventkit
     depends_on:
     - postgis
@@ -16,7 +18,7 @@ services:
     - postgis
     - rabbitmq
     expose:
-    - "6080"
+    - "6443"
     command: sh /var/lib/eventkit/scripts/eventkit-start.sh
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
@@ -24,11 +26,13 @@ services:
     - SITE_NAME
     - SITE_IP
     - TERM
-    - DEBUG
+    - DEBUG=True
+    - LOG_LEVEL=INFO
     - PRODUCTION
     - DJANGO_LOG_LEVEL
     - LOG_LEVEL
     - EXPORT_DOWNLOAD_ROOT
+    - EXPORT_STAGING_ROOT
     - PYTHONWARNINGS
     - DISABLE_SSL_VERIFICATION
     - MAX_EXPORTRUN_EXPIRATION_DAYS
@@ -39,7 +43,7 @@ services:
     - CONTAINER_CODE_PATH
     - DEV_MACHINE_CODE_PATH
     - DJANGO_MODEL_LOGIN=True
-    - LOGIN_DISCLAIMER
+    - LOGIN_DISCLAIMER=Welcome to Sand Hill Geographic EventKit 
     - BANNER_TEXT
     - BANNER_TEXT_COLOR
     - BANNER_BACKGROUND_COLOR
@@ -53,9 +57,12 @@ services:
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
   celery:
+    restart: unless-stopped
     image: eventkit/eventkit-base:1.2.1
     volumes:
     - ./:/var/lib/eventkit/
+    - /staging/:/staging/
+    - /downloads/:/downloads/
     user: eventkit
     depends_on:
     - postgis
@@ -70,12 +77,16 @@ services:
     - SITE_NAME
     - SITE_IP
     - TERM
-    - DEBUG
     - PRODUCTION
     - DJANGO_LOG_LEVEL
     - LOG_LEVEL
+    - EXPORT_STAGING_ROOT
     - EXPORT_DOWNLOAD_ROOT
     - PYTHONWARNINGS
+    - USE_S3
+    - AWS_BUCKET_NAME
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_KEY
     - DISABLE_SSL_VERIFICATION
     - MAX_EXPORTRUN_EXPIRATION_DAYS
     - CONCURRENCY=4
@@ -86,6 +97,7 @@ services:
     - "${SITE_NAME}:${SITE_IP}"
     command: sh /var/lib/eventkit/scripts/celery-start.sh
   celery-beat:
+    restart: unless-stopped
     image: eventkit/eventkit-base:1.2.1
     volumes:
     - ./:/var/lib/eventkit/
@@ -105,7 +117,6 @@ services:
     - SITE_NAME
     - SITE_IP
     - TERM
-    - DEBUG
     - PRODUCTION
     - DJANGO_LOG_LEVEL
     - LOG_LEVEL
@@ -119,6 +130,7 @@ services:
     - "${SITE_NAME}:${SITE_IP}"
     command: sh /var/lib/eventkit/scripts/celery-beat-start.sh
   postgis:
+    restart: unless-stopped
     image: mdillon/postgis:9.5
     environment:
     - POSTGRES_USER=eventkit
@@ -130,57 +142,29 @@ services:
     volumes:
     - "postgis_database:/var/lib/postgresql/data"
   rabbitmq:
+    restart: unless-stopped
     image: rabbitmq:3.6.6-management
     expose:
     - "5672"
   httpd:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: config/Dockerfile_httpd
     volumes:
     - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-    - ./exports_download:/var/lib/eventkit/exports_download
+    - /downloads/:/downloads/
+    - ./certificate.pem:/certificate.pem
+    - ./key.pem:/key.pem
     image: httpd:2.4.23
     links:
     - eventkit
     - webpack
     ports:
-    - "80:80"
-    - "9229:9229"
+    - "443:443"
     environment:
     - SITE_NAME=${SITE_NAME}
     - LOG_LEVEL=warn
-  flower:
-    image: eventkit/eventkit-base:1.2.1
-    volumes:
-    - ./:/var/lib/eventkit/
-    user: eventkit
-    depends_on:
-    - rabbitmq
-    - eventkit
-    - postgis
-    links:
-    - rabbitmq
-    - postgis
-    ports:
-    - "49555:5555"
-    command: sh /var/lib/eventkit/scripts/flower-start.sh
-    extra_hosts:
-    - "${SITE_NAME}:${SITE_IP}"
-    environment:
-    - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-    - BROKER_API=http://guest:guest@rabbitmq:15672/api/
-    - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-    - SITE_NAME
-    - SITE_IP
-    - TERM
-    - DEBUG
-    - PRODUCTION
-    - DJANGO_LOG_LEVEL
-    - LOG_LEVEL
-    - EXPORT_DOWNLOAD_ROOT
-    - PYTHONWARNINGS
-    - DISABLE_SSL_VERIFICATION
   webpack:
     build:
       context: .
@@ -197,6 +181,7 @@ services:
     - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
     - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
     - ./.git:/var/lib/eventkit/.git
+    command: npm run build
     ports:
     - "8080:8080"
     expose:
