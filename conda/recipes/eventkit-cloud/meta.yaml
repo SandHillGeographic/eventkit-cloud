@@ -63,7 +63,7 @@ requirements:
     - Shapely=1.6.4
     - simplejson=3.10.0
     - whitenoise=3.3.0
-    - memcache
+    - python-memcached=1.59
 about:
   home: https://github.com/venicegeo/eventkit-cloud
   license: BSD 3-Clause
