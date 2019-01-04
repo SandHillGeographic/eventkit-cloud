@@ -269,10 +269,13 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     if not out_dataset:
         out_dataset = in_dataset
 
+    # don't operate on the original file.  If the renamed file already exists,
+    # then don't try to rename, since that file may not exist if this is a retry.
     if out_dataset == in_dataset:
         in_dataset = os.path.join(os.path.dirname(out_dataset), "old_{0}".format(os.path.basename(out_dataset)))
-        logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
-        os.rename(out_dataset, in_dataset)
+        if not os.path.isfile(in_dataset):
+            logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
+            os.rename(out_dataset, in_dataset)
 
     meta = get_meta(in_dataset)
 
@@ -407,8 +410,9 @@ def get_dimensions(bbox, scale):
     :param scale: A scale in meters per pixel.
     :return: A list [width, height] representing pixels
     """
-    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
-    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+    # Request at least one pixel
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]]) or 1
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]]) or 1
     return [int(width/scale), int(height/scale)]
 
 
@@ -505,3 +509,68 @@ def get_band_statistics(file_path, band=1):
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
         return None
+
+
+def track_progress(proc, callback, *args, **kwargs):
+    """
+    Blocking call
+    GDAL version 2.2.4 (tested)
+
+    Converts the stdout of a gdal subprocess that has the -progress flag specified into a series of notifications
+    supplied to the callback function.  This method assumes that the subprocess's stdout stream is using
+    text mode (e.g. universal_newlines=True):
+        https://docs.python.org/3/library/subprocess.html#frequently-used-arguments
+
+    GDAL's stdout output is formatted as:
+        0...10...20...30...40...50...60...70...80...90...100 - done.
+
+    Issues:
+        - Assumes gdal utility only prints the progress string to stdout
+        - Will not handle non-integer based progress reporting from GDAL
+        - Some issues may arise, including delayed reporting, due to buffering of the io channels
+
+    :param proc: The subprocess where GDAL is running
+    :param callback: Function with callback
+    :param args: Additional parameters passed to callback
+    :param kwargs: Additional parameters passed to callback
+    :return:
+    """
+    buffer = [None] * 10
+    write = 0
+
+    def read_next(size):
+        # Buffer numeric characters until we find a non-numeric character... then parse the number
+        nonlocal buffer
+        nonlocal write
+
+        r = proc.stdout.read(size)
+        # print(r)
+
+        for c in r:
+            if c.isdigit():
+                buffer[write] = c
+                write += 1
+            else:
+                if write > 0:
+                    progress = float(''.join(buffer[0:write]))  # Take the first 'write' characters
+                    reset()
+                    callback(progress, *args, **kwargs)
+
+        return r
+
+    def reset():
+        nonlocal write
+        nonlocal buffer
+
+        for i in range(0, write):
+            buffer[i] = None
+        write = 0
+
+    # The number of characters we read here are based on the expected GDAL output
+    if proc.poll() is None:
+        read_next(2)  # 0.
+
+    while proc.poll() is None:
+        read_next(5)  # ..10. ..20. ..30.
+
+    read_next(-1)  # Till EOF

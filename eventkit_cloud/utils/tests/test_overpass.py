@@ -42,7 +42,7 @@ class TestOverpass(TestCase):
         self.job.formats = self.formats
         self.job.save()
         self.osm = self.path + '/files/query.osm'
-        self.query = '[maxsize:2147483648][timeout:1600];(node(6.25,-10.85,6.4,-10.62);<;);out body;'
+        self.query = '[maxsize:2147483648][timeout:1600];(relation(6.25,-10.85,6.4,-10.62);way(6.25,-10.85,6.4,-10.62);node(6.25,-10.85,6.4,-10.62));<;(._;>;);out body;'
 
     def test_get_query(self,):
         overpass = Overpass(
@@ -56,7 +56,7 @@ class TestOverpass(TestCase):
     @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
     @patch('eventkit_cloud.utils.overpass.auth_requests.post')
     def test_run_query(self, mock_post, export_task, mock_close):
-        verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
+        verify_ssl = getattr(settings, "SSL_VERIFICATION", True)
         export_task_instance = Mock(progress=0, estimated_finish=None)
         export_task.objects.get.return_value = export_task_instance
         # Only important that it's not None
@@ -79,7 +79,6 @@ class TestOverpass(TestCase):
                                           data=q,
                                           stream=True,
                                           verify=verify_ssl)
-        self.assertEqual(export_task_instance.progress, 50)
         mock_close.assert_called()
         f = open(out)
         data = f.read()

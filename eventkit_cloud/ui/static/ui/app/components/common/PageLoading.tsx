@@ -37,7 +37,7 @@ interface Props {
 export function PageLoading(props: Props) {
     const { classes, background, partial, theme } = props;
 
-    let style: any = { ...props.style };
+    const style: any = { ...props.style };
 
     if (background === 'solid') {
         style.backgroundColor = theme.eventkit.colors.background;
@@ -61,4 +61,4 @@ export function PageLoading(props: Props) {
     );
 }
 
-export default withTheme()<any>(withStyles<any, any>(jss)(PageLoading));
+export default withTheme()(withStyles<any, any>(jss)(PageLoading));

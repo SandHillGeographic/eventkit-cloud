@@ -1,6 +1,7 @@
 import { push } from 'react-router-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
+import { resetState } from './uiActions';
 
 export const types = {
     USER_LOGGING_IN: 'USER_LOGGING_IN',
@@ -22,9 +23,10 @@ export function logout() {
                 window.location.assign(response.data.OAUTH_LOGOUT_URL);
             } else {
                 dispatch(push({ pathname: '/login' }));
+                dispatch(resetState());
             }
         }).catch((error) => {
-            console.log(error);
+            console.warn(error);
         })
     );
 }
@@ -70,29 +72,16 @@ export function login(data) {
 }
 
 export function patchUser(acceptedLicenses, username) {
-    return (dispatch) => {
-        const csrftoken = cookie.load('csrftoken');
-
-        dispatch({
-            type: types.PATCHING_USER,
-        });
-
-        return axios({
-            url: `/api/users/${username}`,
-            method: 'PATCH',
-            data: { accepted_licenses: acceptedLicenses },
-            headers: { 'X-CSRFToken': csrftoken },
-        }).then((response) => {
-            dispatch({
-                type: types.PATCHED_USER,
-                payload: response.data || { ERROR: 'No user response data' },
-            });
-        }).catch((error) => {
-            dispatch({
-                type: types.PATCHING_USER_ERROR,
-                error: error.response.data,
-            });
-        });
+    return {
+        types: [
+            types.PATCHING_USER,
+            types.PATCHED_USER,
+            types.PATCHING_USER_ERROR,
+        ],
+        url: `/api/users/${username}`,
+        method: 'PATCH',
+        data: { accepted_licenses: acceptedLicenses },
+        onSuccess: response => ({ payload: response.data || { ERROR: 'No user response data' } }),
     };
 }
 
@@ -111,7 +100,7 @@ export function userActive() {
                 },
             });
         }).catch((error) => {
-            console.error(error.message);
+            console.warn(error.message);
         })
     );
 }

@@ -1,5 +1,6 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
+import { types } from '../actions/uiActions';
 import { userReducer } from './userReducer';
 import { usersReducer } from './usersReducer';
 import {
@@ -10,7 +11,7 @@ import {
     rerunExportReducer,
 } from './datacartReducer';
 import { drawerMenuReducer, stepperReducer } from './uiReducer';
-import { getProvidersReducer } from './providerReducer';
+import { getProvidersReducer, providerTasksReducer } from './providerReducer';
 import { getFormatsReducer } from './formatReducer';
 import { geocodeReducer } from './geocodeReducer';
 import {
@@ -25,7 +26,7 @@ import authReducer from './authReducer';
 import { userGroupsReducer } from './groupReducer';
 import { notificationsReducer } from './notificationsReducer';
 
-const rootReducer = combineReducers({
+const reducer = combineReducers({
     // short hand property names
     auth: authReducer,
     aoiInfo: exportAoiInfoReducer,
@@ -49,6 +50,16 @@ const rootReducer = combineReducers({
     users: usersReducer,
     notifications: notificationsReducer,
     exports: runsReducer,
+    providerTasks: providerTasksReducer,
 });
+
+const rootReducer = (rootState, action) => {
+    let state = rootState;
+    if (action.type === types.RESET_STATE) {
+        state = undefined;
+    }
+
+    return reducer(state, action);
+};
 
 export default rootReducer;
