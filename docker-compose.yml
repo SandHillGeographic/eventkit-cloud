@@ -27,7 +27,6 @@ services:
     - SITE_NAME
     - SITE_IP
     - TERM
-    - DEBUG=True
     - LOG_LEVEL=INFO
     - PRODUCTION
     - DJANGO_LOG_LEVEL
@@ -195,7 +194,8 @@ services:
     - postgis
     ports:
     - "49555:5555"
-    command: flower -A eventkit_cloud --address=0.0.0.0 --port=5555 --broker=amqp://guest:guest@rabbitmq:5672/ --broker_api=http://guest:guest@rabbitmq:15672/api/
+    command: echo "Not used"
+    # command: flower -A eventkit_cloud --address=0.0.0.0 --port=5555 --broker=amqp://guest:guest@rabbitmq:5672/ --broker_api=http://guest:guest@rabbitmq:15672/api/
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
     environment:
@@ -203,7 +203,6 @@ services:
     - SITE_NAME
     - SITE_IP
     - TERM
-    - DEBUG
     - PRODUCTION
     - DJANGO_LOG_LEVEL
     - LOG_LEVEL
