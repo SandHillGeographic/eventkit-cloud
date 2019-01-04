@@ -20,7 +20,7 @@ services:
     - memcached
     expose:
     - "6443"
-    command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6443 --worker-class eventlet --workers 1 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
+    command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6443 --worker-class eventlet --workers 2 --threads 4 --name eventkit --user eventkit --no-sendfile --reload --certfile=certificate.pem --keyfile=key.pem
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
     - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
@@ -229,10 +229,9 @@ services:
     - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
     - ./.git:/var/lib/eventkit/.git
     command: npm run build
-    ports:
-    - "8080:8080"
     expose:
     - "9229"
+    - "8080"
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
     #if wishing to use the dev server uncomment this or run it via the command line
